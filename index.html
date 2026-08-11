@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Локальный личный планировщик задач и событий." />
+    <title>Планировщик</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#calendar">Перейти к календарю</a>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Личный планировщик</p>
+            <h1>Планировщик</h1>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="create-record" class="icon-button primary" type="button" aria-label="Создать запись" title="Создать запись">
+            <span aria-hidden="true">+</span>
+          </button>
+          <button id="export-data" class="text-button" type="button">Экспорт</button>
+          <button id="import-data" class="text-button" type="button">Импорт</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden />
+        </div>
+      </header>
+
+      <main>
+        <section class="control-bar" aria-label="Управление календарём">
+          <div class="view-switcher" role="group" aria-label="Представление календаря">
+            <button type="button" data-view="day" aria-pressed="false">День</button>
+            <button class="is-selected" type="button" data-view="week" aria-pressed="true">Неделя</button>
+            <button type="button" data-view="month" aria-pressed="false">Месяц</button>
+          </div>
+
+          <div class="period-controls" aria-label="Период календаря">
+            <button id="previous-period" class="icon-button" type="button" aria-label="Предыдущий период" title="Предыдущий период">
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button id="period-label" class="period-label" type="button" aria-label="Выбрать дату" title="Выбрать дату">Текущая неделя</button>
+            <input id="period-picker" class="period-picker" type="date" aria-label="Выберите дату" tabindex="-1" />
+            <button id="next-period" class="icon-button" type="button" aria-label="Следующий период" title="Следующий период">
+              <span aria-hidden="true">›</span>
+            </button>
+            <button id="today-period" class="today-button" type="button">Сегодня</button>
+          </div>
+
+          <label class="search-field">
+            <span class="sr-only">Поиск по записям</span>
+            <span class="search-icon" aria-hidden="true"></span>
+            <input id="global-search" type="search" placeholder="Поиск" autocomplete="off" />
+          </label>
+        </section>
+
+        <section class="utility-bar" aria-label="Разделы и фильтры">
+          <div class="utility-links" role="group" aria-label="Разделы">
+            <button id="open-inbox" type="button">Входящие</button>
+            <button id="open-archive" type="button">Архив</button>
+            <button id="open-trash" type="button">Корзина</button>
+            <button id="open-categories" type="button">Категории</button>
+            <button id="create-today" type="button">Задача на сегодня</button>
+            <button id="create-tomorrow" type="button">На завтра</button>
+          </div>
+
+          <details class="filters-panel">
+            <summary>Фильтры</summary>
+            <div class="filter-options">
+              <fieldset class="filter-category-field"><legend>Категории</legend><div id="filter-categories" class="category-filter-list"></div></fieldset>
+              <label>Статус<select id="filter-status"><option value="active">Активные</option><option value="archived">Архивные</option></select></label>
+              <label>Период<select id="filter-period"><option value="open">Открытый период</option><option value="current-day">Сегодня</option><option value="current-week">Текущая неделя</option><option value="current-month">Текущий месяц</option><option value="custom">Свой диапазон</option></select></label>
+              <div id="filter-custom-range" class="filter-custom-range" hidden><label>С<input id="filter-date-from" type="date" /></label><label>По<input id="filter-date-to" type="date" /></label></div>
+              <button id="reset-filters" class="reset-button" type="button">Сбросить фильтры</button>
+            </div>
+          </details>
+        </section>
+
+        <section id="storage-notice" class="storage-notice" aria-live="assertive" hidden></section>
+        <section id="action-notice" class="storage-notice" aria-live="polite" hidden><p></p><button type="button">Отменить</button></section>
+
+        <section id="inbox-panel" class="inbox-panel" aria-labelledby="inbox-title" hidden>
+          <div class="panel-heading"><h2 id="inbox-title">Входящие</h2><button class="text-button" type="button" data-close="inbox-panel">Закрыть</button></div>
+          <div id="inbox-list" class="inbox-list"></div>
+        </section>
+
+        <section id="trash-panel" class="inbox-panel" aria-labelledby="trash-title" hidden>
+          <div class="panel-heading"><h2 id="trash-title">Корзина</h2><button class="text-button" type="button" data-close="trash-panel">Закрыть</button></div>
+          <div id="trash-list" class="inbox-list"></div>
+        </section>
+
+        <section id="calendar" class="calendar-card" aria-labelledby="calendar-title">
+          <div class="calendar-heading">
+            <div>
+              <p class="section-kicker">Календарь</p>
+              <h2 id="calendar-title">Неделя</h2>
+            </div>
+            <p class="calendar-status">Активные записи</p>
+          </div>
+
+          <div class="week-scroll" tabindex="0" aria-label="Календарная неделя">
+            <div id="week-grid" class="week-grid"></div>
+          </div>
+
+          <p class="empty-week-message">На этой неделе пока нет активных записей.</p>
+        </section>
+      </main>
+
+      <footer class="app-footer">Данные сохранятся в этом браузере.</footer>
+    </div>
+
+    <dialog id="record-dialog" class="app-dialog">
+      <form id="record-form" method="dialog">
+        <div class="dialog-heading"><h2 id="record-dialog-title">Новая запись</h2><button class="close-dialog" type="button" data-close="record-dialog" aria-label="Закрыть окно" title="Закрыть"><span aria-hidden="true">×</span></button></div>
+        <input name="recordId" type="hidden" />
+        <input name="occurrenceDate" type="hidden" />
+        <fieldset class="type-choice"><legend>Тип записи</legend><label><input type="radio" name="type" value="task" checked /> Задача</label><label><input type="radio" name="type" value="event" /> Событие</label></fieldset>
+        <label>Название<input name="title" maxlength="120" required /></label>
+        <div class="form-category-row"><label>Категория<span class="category-select"><i id="record-category-dot" class="category-dot" aria-hidden="true"></i><select name="categoryId" required></select></span></label><button id="open-inline-category" class="text-button" type="button">Новая категория</button></div>
+        <div id="inline-category-fields" class="inline-category-fields" hidden><label>Название категории<input name="newCategoryName" maxlength="30" /></label><label>Цвет<input name="newCategoryColor" type="color" value="#5f95d5" /></label><button id="create-inline-category" class="today-button" type="button">Добавить категорию</button></div>
+        <div class="form-row"><label>Дата<input name="startDate" type="date" /></label><label id="record-time-field">Время<input name="time" type="time" /></label></div>
+        <label id="record-end-date-field" class="end-date-field" hidden>Дата окончания<input name="endDate" type="date" /></label>
+        <label>Описание<textarea name="description" maxlength="2000" rows="4"></textarea></label>
+        <fieldset class="repeat-choice"><legend>Повторение</legend><label><input name="repeatEnabled" type="checkbox" /> Ежедневно</label></fieldset>
+        <div id="repeat-settings" class="repeat-settings" hidden>
+          <label>Окончание<select name="repeatEndCondition"><option value="date">По дате</option><option value="count">По количеству</option><option value="never">Без окончания</option></select></label>
+          <label id="repeat-end-value-label">Дата окончания<input name="repeatEndValue" type="date" /></label>
+        </div>
+        <label id="series-edit-scope" hidden>Изменить<select name="seriesEditScope"><option value="only">Только это событие</option><option value="future">Это и будущие</option></select></label>
+        <p id="record-form-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions"><button class="today-button" type="button" data-close="record-dialog">Отмена</button><button class="today-button" type="button" id="clear-record-date">Во входящие</button><button class="today-button" type="submit">Сохранить</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="details-dialog" class="app-dialog"><div id="details-content"></div></dialog>
+
+    <dialog id="categories-dialog" class="app-dialog">
+      <div class="dialog-heading"><h2>Категории</h2><button class="close-dialog" type="button" data-close="categories-dialog" aria-label="Закрыть окно" title="Закрыть"><span aria-hidden="true">×</span></button></div>
+      <div id="categories-list" class="categories-list"></div>
+      <form id="category-form" class="category-form"><label>Новая категория<input name="name" maxlength="30" required /></label><label>Цвет<input name="color" type="color" value="#5f95d5" aria-label="Выберите цвет категории" /></label><button class="today-button" type="submit">Добавить</button></form>
+      <p id="category-form-error" class="form-error" role="alert"></p>
+    </dialog>
+
+    <dialog id="series-action-dialog" class="app-dialog choice-dialog">
+      <div class="dialog-heading"><h2 id="series-action-title">Действие с серией</h2><button class="close-dialog" type="button" data-close="series-action-dialog" aria-label="Закрыть окно" title="Закрыть"><span aria-hidden="true">×</span></button></div>
+      <p id="series-action-message"></p>
+      <div class="dialog-actions"><button class="today-button" type="button" data-series-choice="cancel">Отмена</button><button class="today-button" type="button" data-series-choice="only">Только этот экземпляр</button><button class="today-button" type="button" data-series-choice="future">Этот и будущие</button></div>
+    </dialog>
+
+    <dialog id="import-dialog" class="app-dialog">
+      <div class="dialog-heading"><h2>Импорт резервной копии</h2><button class="close-dialog" type="button" data-close="import-dialog" aria-label="Закрыть окно" title="Закрыть"><span aria-hidden="true">×</span></button></div>
+      <p id="import-summary"></p>
+      <p class="import-warning">Текущие данные будут полностью заменены. При необходимости сначала сделайте экспорт.</p>
+      <p id="import-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions"><button class="today-button" type="button" data-close="import-dialog">Отмена</button><button id="confirm-import" class="today-button" type="button">Заменить все текущие данные</button></div>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
